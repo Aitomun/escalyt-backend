@@ -1,0 +1,23 @@
+version: '3.3'
+services:
+  escalayt_api:
+    container_name: escalayt_container
+    build: ./
+    ports:
+      - "8045:8080"
+    depends_on:
+      - mysqldb
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/escalayt_web_storeDB
+      SPRING_DATASOURCE_USERNAME: escalayt
+      SPRING_DATASOURCE_PASSWORD: escalayt_password
+
+  mysqldb:
+    image: mysql:latest
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=escalayt
+      - MYSQL_USER=escalayt
+      - MYSQL_PASSWORD=escalayt_password
+      - MYSQL_DATABASE=escalayt_web_storeDB
