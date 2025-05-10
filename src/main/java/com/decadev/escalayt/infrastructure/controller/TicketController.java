@@ -50,32 +50,34 @@ public class TicketController {
 
 	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 	@PostMapping("/create/{id}")
-	public ResponseEntity<?> createTicket(@PathVariable Long id ,
-										  @RequestParam("title") String title,
-										  @RequestParam("location") String location,
-										  @RequestParam("priority") Priority priority,
-										  @RequestParam("description") String description,
-										  @RequestParam("file") MultipartFile file) throws ExecutionException, InterruptedException {
+	public ResponseEntity<?> createTicket(
+			@PathVariable Long id,
+			@RequestParam("title") String title,
+			@RequestParam("location") String location,
+			@RequestParam("priority") Priority priority,
+			@RequestParam("description") String description,
+			@RequestPart(value = "file", required = false) MultipartFile file
+	) throws ExecutionException, InterruptedException {
 
-		// get the user from security context
+		// Get the authenticated user
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String currentUsername = authentication.getName();
 
-		// Create a new ticket using the service layer
+		// Prepare the request DTO
 		TicketRequest ticketRequestDto = new TicketRequest();
 		ticketRequestDto.setTitle(title);
 		ticketRequestDto.setLocation(location);
 		ticketRequestDto.setPriority(priority);
 		ticketRequestDto.setDescription(description);
-		ticketRequestDto.setAttachment(file);
+		ticketRequestDto.setAttachment(file); // Optional file
 		ticketRequestDto.setCategoryId(id);
 
-		// create new ticket
+		// Call the service to create the ticket
 		TicketResponse response = ticketService.createTicket(ticketRequestDto, currentUsername);
 
 		return ResponseEntity.ok(response);
-
 	}
+
 
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@DeleteMapping("/delete/{id}")
@@ -281,7 +283,7 @@ public class TicketController {
 	}
 
 	//To Get a list of all the tickets the user created
-	@PreAuthorize("hasRole('USER')")
+	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 	@GetMapping("/list-user")
 	public ResponseEntity<?> getTicketsCreatedByUser() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

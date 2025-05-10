@@ -111,7 +111,7 @@ public class AdminController {
     }
 
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     @GetMapping("/categories")
     public ResponseEntity<AllCategoryResponse> getAllCategories() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
