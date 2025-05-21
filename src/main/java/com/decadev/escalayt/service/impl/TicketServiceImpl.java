@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -387,7 +388,9 @@ public class TicketServiceImpl implements TicketService {
 						ticket.getAssignee() != null ?
 								ticket.getAssignee().getFirstName() + " " + ticket.getAssignee().getLastName() : "Unassigned",  // Assignee name, handle null
 						ticket.getCreatedDate(),                             // Ticket creation date
-						ticket.getLocation()                                // Ticket location
+						ticket.getLocation(),                                // Ticket location
+						ticket.getCreatedBy() // ✅ Add this
+
 				))
 				.collect(Collectors.toList());  // Collect results into a list
 
@@ -422,5 +425,26 @@ public class TicketServiceImpl implements TicketService {
 		return new TicketAssignmentResponse(ticket,user,message);
 	}
 
+	public long countAll() {
+		return ticketRepository.count();
+	}
+
+	public Map<String, Long> countByStatus() {
+        System.out.println("Fetched Ticket Status Distribution:");
+        ticketRepository.findAll().forEach(t -> System.out.println(t.getId() + " - " + t.getStatus()));
+
+        return ticketRepository.findAll().stream()
+				.collect(Collectors.groupingBy(t -> t.getStatus().toString(), Collectors.counting()));
+
+
+	}
+
+	public double averageResolutionTime() {
+		List<Ticket> resolved = ticketRepository.findByStatus(Status.RESOLVED);
+		return resolved.stream()
+				.filter(t -> t.getResolvedAt() != null && t.getCreatedDate() != null)
+				.mapToLong(t -> Duration.between(t.getCreatedDate(), t.getResolvedAt()).toMinutes())
+				.average().orElse(0);
+	}
 
 }

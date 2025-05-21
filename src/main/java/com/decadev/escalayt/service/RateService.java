@@ -5,4 +5,6 @@ import jakarta.mail.MessagingException;
 
 public interface RateService {
     RateResponse createRating(Long ticketId, RateRequest rateRequest) throws MessagingException;
+
+    RateResponse getMyRating(Long ticketId);
 }

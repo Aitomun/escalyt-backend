@@ -16,9 +16,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class RateServiceImpl implements RateService {
     private final RateRepository rateRepository;
     private final TicketRepository ticketRepository;
@@ -44,6 +46,11 @@ public class RateServiceImpl implements RateService {
         if (!"RESOLVED".equalsIgnoreCase(String.valueOf(ticket.getStatus()))) {
             throw new TicketNotResolvedException("Cannot rate a ticket that is not resolved");
         }
+        // Prevent multiple ratings by same user
+        if (rateRepository.existsByTicketIdAndPersonId(ticketId, person.getId())) {
+            throw new InvalidRatingException("You have already rated this ticket");
+        }
+
 
         // Create a new Rate entity
         Rate rate = new Rate();
@@ -51,6 +58,7 @@ public class RateServiceImpl implements RateService {
         rate.setPerson(person);
         rate.setRatingCount(rateRequest.getRatingCount());
         rate.setReviewMessage(rateRequest.getReviewMessage());
+        rate.setOrgId(ticket.getOrgId());
 
         // Save the Rate entity
         Rate savedRate = rateRepository.save(rate);
@@ -74,4 +82,23 @@ public class RateServiceImpl implements RateService {
             return principal.toString();
         }
     }
+    public RateResponse getMyRating(Long ticketId) {
+        String username = getCurrentUsername();
+        Person person = personRepository.findByEmail(username)
+                .orElseThrow(() -> new EntityNotFoundException("Person not found"));
+        Rate rate = rateRepository.findByTicketIdAndPersonId(ticketId, person.getId())
+                .orElseThrow(() -> new EntityNotFoundException("No rating found"));
+        return mapToResponse(rate);
+    }
+    private RateResponse mapToResponse(Rate rate) {
+        RateResponse response = new RateResponse();
+        response.setId(rate.getId());
+        response.setTicketId(rate.getTicket().getId());
+        response.setPersonId(rate.getPerson().getId());
+        response.setRatingCount(rate.getRatingCount());
+        response.setReviewMessage(rate.getReviewMessage());
+        return response;
+    }
+
+
 }

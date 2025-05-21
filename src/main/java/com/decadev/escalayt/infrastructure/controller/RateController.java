@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,11 +22,7 @@ public class RateController {
 
     private final RateService rateService;
 
-//    @PostMapping
-//    public ResponseEntity<RateResponse> rateTicket(@RequestBody @Valid RateRequest rateRequest) throws MessagingException {
-//        RateResponse rateResponse = rateService.createRating(rateRequest);
-//        return new ResponseEntity<>(rateResponse, HttpStatus.CREATED);
-//    }
+
 @PostMapping("/{ticketId}")
 public ResponseEntity<?> rateTicket(@PathVariable Long ticketId, @RequestBody @Valid RateRequest rateRequest) {
     try {
@@ -40,6 +38,18 @@ public ResponseEntity<?> rateTicket(@PathVariable Long ticketId, @RequestBody @V
         return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
+    @GetMapping("/{ticketId}/me")
+    public ResponseEntity<?> getMyRating(
+            @PathVariable Long ticketId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            RateResponse resp = rateService.getMyRating(ticketId);
+            return ResponseEntity.ok(resp);
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
 }
 
 

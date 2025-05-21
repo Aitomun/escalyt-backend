@@ -1,5 +1,6 @@
 package com.decadev.escalayt.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,7 +26,7 @@ public class Rate {
 
     @ManyToOne
     @JoinColumn(name = "ticket_id")
-    @JsonManagedReference
+    @JsonBackReference   // prevents serializing ticket → rate → ticket → …
     private Ticket ticket;
 
     @ManyToOne

@@ -141,6 +141,8 @@ public class AdminController {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", person.getId());
                     map.put("name", person.getFirstName() + " " + person.getLastName());
+                    map.put("department", person.getDepartment()); // ✅ Add this line
+
                     return map;
                 })
                 .collect(Collectors.toList());

@@ -70,6 +70,20 @@ public class Ticket {
     private LocalDateTime createdDate;
 
     public boolean isResolved() {
-        return false;
+        return
+                this.status == Status.RESOLVED;
     }
+
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
+
+    public LocalDateTime getResolvedAt() {
+        return resolvedAt;
+    }
+
+    public void setResolvedAt(LocalDateTime resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
+
 }

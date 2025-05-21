@@ -37,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -116,27 +117,30 @@ public class TicketController {
 
 	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 	@GetMapping("/last-three-resolved-tickets")
-	public ResponseEntity<List<Ticket>> getLastThreeResolvedTickets() {
+
+	public ResponseEntity<List<TicketResponse>> getLastThreeResolvedTickets() {
 		List<Ticket> tickets = ticketService.getLastThreeResolvedTickets();
-		return ResponseEntity.ok(tickets);
+		List<TicketResponse> dtos = tickets.stream()
+				.map(this::toResponse)
+				.collect(Collectors.toList());
+		return ResponseEntity.ok(dtos);
 	}
 
-	//For the Admin
-	/*@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/admin/recent")
-	public Page<Ticket> getRecentTickets(@RequestParam(defaultValue = "0") int page,
-										 @RequestParam(defaultValue = "7") int size) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String email = authentication.getName();
-		Person person = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-		if (person == null) {
-			throw new RuntimeException("User not found");
-		}
-		Long orgId = person.getOrgId();
+	private TicketResponse toResponse(Ticket t) {
+		return TicketResponse.builder()
+				.createdBy(t.getCreatedBy())
+				.title(t.getTitle())
+				.priority(t.getPriority())
+				.status(t.getStatus())
+				.location(t.getLocation())
+				.description(t.getDescription())
+				.attachment(t.getAttachment())
+				.categoryId(t.getCategory().getId())
+				// etc. – only the fields you actually need
+				.build();
+	}
 
-		Pageable pageable = PageRequest.of(page, size);
-		return ticketService.getAllRecentTickets(orgId,pageable);
-	}*/
+
 
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/admin/recent")
@@ -152,17 +156,6 @@ public class TicketController {
 		return ticketService.getAllRecentTickets(orgId, pageable);
 	}
 
-	// For the employee, To get all the tickets that they have created
-	/*@PreAuthorize("hasRole('USER')")
-	@GetMapping("/user/recent")
-	public Page<Ticket> getUserRecentTickets(@RequestParam(defaultValue = "0") int page,
-											 @RequestParam(defaultValue = "7") int size
-	) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Pageable pageable = PageRequest.of(page, size);
-		String email = authentication.getName();
-		return ticketService.getUserTickets(email, pageable);
-	}*/
 
 	@PreAuthorize("hasRole('USER')")
 	@GetMapping("/user/recent")
@@ -175,7 +168,7 @@ public class TicketController {
 	}
 
 
-	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+//	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 	@PostMapping("/filter")
 	public ResponseEntity<FilterTicketsResponse> filterTickets(@RequestBody FilterTicketsRequest request, Authentication authentication) {
 		Person user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found"));

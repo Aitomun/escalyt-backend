@@ -30,4 +30,6 @@ public class AllTicketsResponse {
     private LocalDateTime createdDate;
 
     private  String location;
+    private Long createdBy; // ✅ Add this
+
 }
